@@ -25,29 +25,31 @@ functions.space()
 st.write('<p style="font-size:130%">Import Dataset</p>', unsafe_allow_html=True)
 
 file_format = st.radio('Select file format:', ('csv', 'excel'), key='file_format')
-dataset = st.file_uploader(label = '')
+datasets = st.file_uploader(label='Upload your CSV or Excel file', label_visibility='collapsed', accept_multiple_files=True)
 
-use_defo = st.checkbox('Use example Dataset')
-if use_defo:
-    dataset = 'CarPrice_Assignment.csv'
 
 st.sidebar.header('Import Dataset to Use Available Features: 👉')
 
-if dataset:
-    if file_format == 'csv' or use_defo:
-        df = pd.read_csv(dataset)
-    else:
-        df = pd.read_excel(dataset)
-    
-    st.subheader('Dataframe:')
-    n, m = df.shape
-    st.write(f'<p style="font-size:130%">Dataset contains {n} rows and {m} columns.</p>', unsafe_allow_html=True)   
-    st.dataframe(df)
+dataframes = {}
+if datasets:
+    for dataset in datasets:
+        if dataset.name.endswith('.csv'):
+            dataframes[dataset.name] = pd.read_csv(dataset)
+        elif dataset.name.endswith('.xlsx'):
+            dataframes[dataset.name] = pd.read_excel(dataset)
 
-    # Display 'Info' by default
-    st.subheader('Info:')
-    c1, c2, c3 = st.columns([1, 2, 1])
-    c2.dataframe(functions.df_info(df))
+if dataframes:
+    selected_file = st.selectbox("Select a file", options=list(dataframes.keys()))
+    df = dataframes[selected_file]
+
+    # Now use `df` for all your existing functionalities
+    # For example, automatically display 'Info' for the selected file
+    if df is not None:
+        st.subheader(f"Dataframe: {selected_file}")
+        st.dataframe(df)
+        st.subheader('Info:')
+        c1, c2, c3 = st.columns([1, 2, 1])
+        c2.dataframe(functions.df_info(df))
 
 
     all_vizuals = ['NA Info', 'Descriptive Analysis', 'Target Analysis', 
