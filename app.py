@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import numpy as np 
 
 import functions
 
@@ -73,11 +74,27 @@ if dataframes:
 
     all_vizuals = ['Target Analysis', 
                    'Distribution of Numerical Columns', 'Count Plots of Categorical Columns', 
-                   'Box Plots', 'Outlier Analysis', 'Variance of Target with Categorical Columns']
+                   'Box Plots', 'Outlier Analysis', 'Variance of Target with Categorical Columns','Scatter Plots']
     functions.sidebar_space(3)         
     vizuals = st.sidebar.multiselect("Choose which visualizations you want to see 👇", all_vizuals)
 
+    if 'Scatter Plots' in vizuals:
+        st.subheader('Scatter Plot Analysis')
+         # Define num_columns here after loading the dataframe
+        num_columns = df.select_dtypes(include=[np.number]).columns
 
+        # Ensure num_columns is defined and has enough columns for scatter plot
+        if len(num_columns) > 1:
+            col1 = st.selectbox("Select the first variable", num_columns, key='first_col')
+            col2 = st.selectbox("Select the second variable", num_columns, key='second_col')
+
+            # Create scatter plot
+            fig = px.scatter(df, x=col1, y=col2, title=f'Scatter Plot of {col1} vs {col2}')
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.write("Not enough numerical columns for a scatter plot.")
+
+            
     if 'Target Analysis' in vizuals:
         st.subheader("Select target column:")    
         target_column = st.selectbox("", df.columns, index = len(df.columns) - 1)
