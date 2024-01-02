@@ -45,29 +45,37 @@ if dataframes:
     # For example, automatically display 'Info' for the selected file
     if df is not None:
         st.subheader(f"Dataframe: {selected_file}")
-        st.dataframe(df)
-        st.subheader('Info:')
-        st.dataframe(functions.df_info(df))
+        st.write("Number of Rows:", df.shape[0])
+        st.write("Number of Columns:", df.shape[1])
+        st.dataframe(df, use_container_width=True)
+
+        # Creating two columns for 'Info' and 'NA Value Information'
+        col1, col2 = st.columns(2)
+
+        # 'Info' section in the first column
+        with col1:
+            st.subheader('Info:')
+            st.dataframe(functions.df_info(df))
+
+        # 'NA Value Information' section in the second column
+        with col2:
+            st.subheader('NA Value Information:')
+            if df.isnull().sum().sum() == 0:
+                st.write('There are no NA values in your dataset.')
+            else:
+                st.dataframe(functions.df_isnull(df), width=1500)
+
+        functions.space(2)
+
+        st.subheader('Descriptive Analysis:')
+        st.dataframe(df.describe(), use_container_width=True)
 
 
-    all_vizuals = ['NA Info', 'Descriptive Analysis', 'Target Analysis', 
+    all_vizuals = ['Target Analysis', 
                    'Distribution of Numerical Columns', 'Count Plots of Categorical Columns', 
                    'Box Plots', 'Outlier Analysis', 'Variance of Target with Categorical Columns']
     functions.sidebar_space(3)         
     vizuals = st.sidebar.multiselect("Choose which visualizations you want to see 👇", all_vizuals)
-
-
-    if 'NA Info' in vizuals:
-        st.subheader('NA Value Information:')
-        if df.isnull().sum().sum() == 0:
-            st.write('There are no NA values in your dataset.')
-        else:
-            st.dataframe(functions.df_isnull(df), width=1500)
-            functions.space(2)
-
-    if 'Descriptive Analysis' in vizuals:
-        st.subheader('Descriptive Analysis:')
-        st.dataframe(df.describe())
 
 
     if 'Target Analysis' in vizuals:
