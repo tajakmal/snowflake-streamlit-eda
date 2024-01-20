@@ -31,7 +31,7 @@ session = Session.builder.configs(connection_parameters).create()
 
 # Function to get table names from Snowflake
 def get_table_names():
-    query = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'PUBLIC'"  # Adjust as needed
+    query = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'PUBLIC'"
     tables_df = session.sql(query).collect()
     return [row['TABLE_NAME'] for row in tables_df]
 
@@ -44,29 +44,35 @@ def fetch_data_from_table(table_name):
 # Streamlit Sidebar for Snowflake Tables
 st.sidebar.title('Snowflake Data Viewer')
 # Table selection dropdown in the sidebar
-table_names = ['Select a table'] + get_table_names()  # Prepend with a default option
+table_names = ['Select a table'] + get_table_names()
 selected_table = st.sidebar.selectbox("Select a table:", table_names)
 
 # Fetch and display data
 if selected_table and selected_table != 'Select a table':
     data = fetch_data_from_table(selected_table)
     st.sidebar.write(f"Records from {selected_table}:")
-    st.sidebar.dataframe(data)  # Display the DataFrame in the sidebar
+    st.sidebar.dataframe(data)
 
 # Add an Analyze button in the sidebar
 if st.sidebar.button('Analyze'):
-    # Define what happens when the Analyze button is clicked
     if selected_table and selected_table != 'Select a table':
         st.sidebar.write(f"Analysis results for {selected_table}")
-        # Add your analysis logic here. For example, summary stats, plots, etc.
-        # Example: Display a simple message
-        st.sidebar.write("Implement your analysis logic here.")
+        # Implement your analysis logic here
     else:
         st.sidebar.write("Please select a table to analyze.")
 
+# Multi-line text area for code input
+user_code = st.sidebar.text_area("Insert your code here", height=300)
+
+# Dropdown for selecting code type (Python or SQL)
+code_type = st.sidebar.selectbox("Select code type", ["Python", "SQL"])
+
+if st.sidebar.button('Run Code'):
+    # Logic to handle the execution of user-provided code
+    # CAUTION: Executing user-provided code can be risky
+    st.sidebar.write("Code execution not implemented")
 
 
-        
 
 
 # Title of the app
@@ -88,6 +94,9 @@ if prompt := st.chat_input():
 
     # Prepare the conversation history
     conversation_history = "\n".join([f"{msg['role']}: {msg['content']}" for msg in st.session_state["messages"]])
+
+    # Include the selected table in the conversation history
+    conversation_history += f"\nSelected Table: {selected_table}"
 
     # Call the Snowflake Cortex UDF to get the response
     response_df = session.create_dataframe([conversation_history]).select(
