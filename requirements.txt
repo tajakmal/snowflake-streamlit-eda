@@ -1,0 +1,17 @@
+langchain==0.1.1
+langchain-community==0.0.13
+langchain-core==0.1.11
+langsmith==0.0.81
+numpy==1.26.3
+pandas==2.1.4
+plotly==5.18.0
+pyOpenSSL==23.3.0
+python-dateutil==2.8.2
+python-dotenv==1.0.0
+PyYAML==6.0.1
+requests==2.31.0
+snowflake-connector-python==3.6.0
+snowflake-snowpark-python==1.11.1
+sortedcontainers==2.4.0
+SQLAlchemy==2.0.25
+streamlit==1.30.0
