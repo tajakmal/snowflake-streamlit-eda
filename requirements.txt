@@ -14,4 +14,4 @@ snowflake-connector-python==3.6.0
 snowflake-snowpark-python==1.11.1
 sortedcontainers==2.4.0
 SQLAlchemy==2.0.25
-streamlit==1.30.0
+streamlit==1.26.0
