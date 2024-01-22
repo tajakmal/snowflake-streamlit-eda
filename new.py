@@ -10,6 +10,7 @@ from langchain.memory import ConversationBufferMemory  # Import Conversation Buf
 import plotly.express as px
 import os
 from dotenv import load_dotenv
+import numpy as np 
 
 # Load .env file
 load_dotenv()
@@ -69,9 +70,16 @@ user_code = st.sidebar.text_area("Insert your code here", height=300)
 code_type = st.sidebar.selectbox("Select code type", ["Python", "SQL"])
 
 if st.sidebar.button('Run Code'):
-    # Logic to handle the execution of user-provided code
-    # CAUTION: Executing user-provided code can be risky
-    st.sidebar.write("Code execution not implemented")
+    # Wrap user_code within triple quotes
+    code_to_run = f'''{user_code}'''
+    
+    # Execute the code_to_run
+    # Note: Directly using exec() like this can be very risky. Ensure you have proper security measures in place.
+    try:
+        exec(code_to_run)
+        st.sidebar.write("Code executed successfully.")
+    except Exception as e:
+        st.sidebar.write(f"Error executing code: {e}")
 
 
 
@@ -83,7 +91,7 @@ system_message = """You will be acting as an AI Snowflake Snowpark Python Expert
 executable python code to the user. You are given one table, the table name is {selected_table}.
 
 When you write the python code, remember to always refer to the {selected_table} and make it snowflake focused. 
-ADDITIONALLY - LOWER CASE ALL COLUMN NAMES IN THE DATAFRAME. For example,
+ADDITIONALLY - LOWER CASE ALL COLUMN NAMES IN THE DATAFRAME. Here's an example,
 '''
 # Fetch Snowpark DataFrame
     df = session.table(selected_table)
@@ -97,7 +105,7 @@ ADDITIONALLY - LOWER CASE ALL COLUMN NAMES IN THE DATAFRAME. For example,
     st.dataframe(data.describe())
 '''
 
-Always access specific columns in a case-insensitive manner. 
+Always access specific columns in a case-insensitive manner. ONLY USE SNOWPARK.
 DO NOT HALLUCINATE - DO NOT MAKE ANYTHING UP.
 WRITE THE FULL CODE - You will get a bonus of $10000 if you do this correctly.
 """
