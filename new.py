@@ -28,6 +28,7 @@ connection_parameters = {
 # Create a Snowflake Session
 session = Session.builder.configs(connection_parameters).create()
 
+st.write(session)
 
 # Function to get table names from Snowflake
 def get_table_names():
@@ -78,6 +79,29 @@ if st.sidebar.button('Run Code'):
 # Title of the app
 st.title("💬 Chatbot with Snowflake Cortex")
 
+system_message = """You will be acting as an AI Snowflake Snowpark Python Expert. Your goals is to give correct,
+executable python code to the user. You are given one table, the table name is {selected_table}.
+
+When you write the python code, remember to always refer to the {selected_table} and make it snowflake focused. 
+ADDITIONALLY - LOWER CASE ALL COLUMN NAMES IN THE DATAFRAME. For example,
+'''
+# Fetch Snowpark DataFrame
+    df = session.table(selected_table)
+    df_columns = df.schema
+
+    # Convert to Pandas DataFrame for visualization
+    data = df.to_pandas()
+
+    # Perform EDA using the Pandas DataFrame
+    st.subheader("Descriptive Statistics")
+    st.dataframe(data.describe())
+'''
+
+Always access specific columns in a case-insensitive manner. 
+DO NOT HALLUCINATE - DO NOT MAKE ANYTHING UP.
+WRITE THE FULL CODE - You will get a bonus of $10000 if you do this correctly.
+"""
+
 # Initialize messages in session state if it doesn't exist
 if "messages" not in st.session_state:
     st.session_state["messages"] = [{"role": "assistant", "content": "How can I help you?"}]
@@ -99,9 +123,18 @@ if prompt := st.chat_input():
     conversation_history += f"\nSelected Table: {selected_table}"
 
     # Call the Snowflake Cortex UDF to get the response
-    response_df = session.create_dataframe([conversation_history]).select(
-        call_udf('snowflake.cortex.complete', 'llama2-70b-chat', concat(lit(conversation_history), F.to_varchar(lit(f"\nUser: {prompt}"))))
+    # response_df = session.create_dataframe([conversation_history]).select(
+    #     call_udf('snowflake.cortex.complete', 'llama2-70b-chat', concat(lit(conversation_history), F.to_varchar(lit(f"\nUser: {prompt}"))))
+    # )
+
+    # Call the Snowflake Cortex UDF to get the response
+    response_df = session.create_dataframe([f"{system_message}\n{conversation_history}"]).select(
+        call_udf('snowflake.cortex.complete', 'llama2-70b-chat', concat(
+            lit(f"{system_message}\n{conversation_history}"), 
+            F.to_varchar(lit(f"\nUser: {prompt}"))
+        ))
     )
+
 
     # Collect the response and update the chat
     full_response = response_df.collect()[0][0]
