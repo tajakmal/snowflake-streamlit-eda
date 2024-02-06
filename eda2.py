@@ -100,6 +100,9 @@ if selected_table and selected_table != 'Select a table':
     # Update `cols_per_row` to 2 for two charts per row
     cols_per_row = 2
     
+
+    visualization_descriptions = []  # List to store visualization descriptions for Cortex summary
+
     # Numerical Columns for Histograms
     st.subheader("Numerical Features")
     num_columns = df.select_dtypes(include=np.number).columns.tolist()
@@ -118,12 +121,16 @@ if selected_table and selected_table != 'Select a table':
                     st.pyplot(fig)
                     plt.close(fig)  # Close the figure to free memory
 
+                    # Describe the visualization for later summary
+                    # histogram_description = f"Histogram for {col} showing the distribution of the data."
+                    # visualization_descriptions.append(histogram_description)
+
     # Categorical Columns for Bar Plots
     st.subheader("Bar Plots for Categorical Features")
     cat_columns = df.select_dtypes(include=['object', 'category']).columns.tolist()
     num_rows_cat = (len(cat_columns) + cols_per_row - 1) // cols_per_row  # Calculate rows needed for categorical
 
-    visualization_descriptions = []  # List to store visualization descriptions for Cortex summary
+    
 
     for i in range(num_rows_cat):
         cols = st.columns(cols_per_row)
@@ -145,13 +152,21 @@ if selected_table and selected_table != 'Select a table':
                     visualization_descriptions.append(visualization_description)
 
     # Now let's summarize the entire EDA process with Cortex
+    
+    # Define the system message
+    system_message = """
+    You are an AI assistant trained to provide summaries of exploratory data analysis. 
+    Please provide a concise and understandable summary of the following data analysis.
+    """
+    
     # First, collect all the descriptions into one string
-    eda_summary_description = (
+    # Combine the system message with the EDA descriptions
+    eda_summary_description = system_message + (
         f"The dataset consists of {dataset_shape}. "
         f"There are {missing_values_count} missing values and {duplicate_rows_count} duplicate rows. "
         f"Data types include: {', '.join([f'{col} ({dtype})' for col, dtype in df.dtypes.items()])}. "
         "Summary statistics provided insights into the central tendency and distribution of numerical features. "
-        + " ".join(visualization_descriptions)  # Add all visualization descriptions
+        + " ".join(visualization_descriptions)
     )
 
     # Get the comprehensive EDA summary from Cortex
