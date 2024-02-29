@@ -110,15 +110,45 @@ if prompt := st.chat_input():
     # Prepare the conversation history
     conversation_history = "\n".join([f"{msg['role']}: {msg['content']}" for msg in st.session_state["messages"]])
 
-    # Call the Snowflake Cortex UDF to get the response
-    response_df = session.create_dataframe([f"{conversation_history}"]).select(
-        call_udf('snowflake.cortex.complete', 'llama2-70b-chat', concat(
-            lit(f"{conversation_history}"), 
-            F.to_varchar(lit(f"\nUser: {prompt}"))
-        ))
-    )
+    # Define the model to use
+    model = 'llama2-70b-chat'  # You can adjust this based on your requirements or selections
+    system_message = '''Answer concisely and accurately: '''
+
+   
+
+    if on:  # If RAG toggle is turned on
+        # Query with RAG and chunking
+        response_df = session.sql(f'''
+        select snowflake.ml.complete(
+            '{model}', 
+            concat( 
+                'Answer the question based on the context. Be concise.','Context: ',
+                (select array_agg(*)::varchar from (
+                    (select chunk from VECTOR_STORE 
+                    order by vector_l2_distance(
+                    snowflake.ml.embed_text('e5-base-v2', 
+                    '{prompt}'
+                    ), chunk_embedding
+                    ) limit 5))
+                    ),
+                'Question: ', 
+                '{prompt}',
+                'Answer: '
+            )
+        ) as response;
+        ''').to_pandas()
+    else:
+        # Query without RAG
+        response_df = session.sql(f'''
+        SELECT SNOWFLAKE.ML.COMPLETE(
+            '{model}',concat('{system_message}','{prompt}')
+        ) as response
+        ''').to_pandas()
+        # Call the Snowflake Cortex UDF to get the response
+       
 
     # Collect the response and update the chat
-    full_response = response_df.collect()[0][0]
+    full_response = response_df['RESPONSE'][0]
+    #full_response = response_df.collect()[0][0]
     st.session_state["messages"].append({"role": "assistant", "content": full_response})
     st.chat_message("assistant").write(full_response)
