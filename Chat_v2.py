@@ -165,6 +165,12 @@ if prompt := st.chat_input():
     conversation_history = "\n".join([f"{msg['role']}: {msg['content']}" for msg in st.session_state["messages"]])
     logging.info(f"Conversation history: \n\n{conversation_history}\n")
 
+    if selected_table and selected_table != 'Select a table':
+        conversation_history += f"\nSelected Table: {selected_table}"
+        #table_summary = 
+        logging.info(f"Conversation history: \n\n{conversation_history}\n")
+
+
     if on:
         # RAG
         logging.info("Pulling information from RAG")
